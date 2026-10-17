@@ -1,7 +1,11 @@
 {
-  "name": "pi-goal-hooks",
+  "name": "pi-bettergoal",
   "version": "0.2.0",
-  "description": "Local pi-goal fork with model-selected waiting and correlated wake hooks",
+  "description": "Enhanced Pi goals with model-selected wait/wake hooks, built on Michaelliv/pi-goal. Conflicts with pi-goal; do not load both.",
+  "homepage": "https://github.com/Liucong-JunZi/pi-bettergoal#readme",
+  "repository": { "type": "git", "url": "git+https://github.com/Liucong-JunZi/pi-bettergoal.git" },
+  "bugs": { "url": "https://github.com/Liucong-JunZi/pi-bettergoal/issues" },
+  "upstream": "https://github.com/Michaelliv/pi-goal",
   "type": "commonjs",
   "keywords": [
     "pi-package",

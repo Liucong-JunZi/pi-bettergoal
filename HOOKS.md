@@ -1,10 +1,10 @@
-# Hook-enabled local fork (upstream pi-goal 0.1.7, MIT)
+# pi-bettergoal hooks (built on pi-goal 0.1.7, MIT)
 
 ## Installation
 
 Load this package instead of npm:pi-goal, never both. Personal settings may reference the absolute local directory. Run /reload in Pi after switching. The currently running extension is not modified by editing settings. Original npm package remains untouched; revert the settings package source to npm:pi-goal to roll back.
 
-This fork targets @earendil-works Pi APIs (including tool terminate:true). It does not modify the model or run outside Pi. No project .pi directory is needed.
+This package targets @earendil-works Pi APIs (including tool terminate:true). It does not modify the model or run outside Pi. No project .pi directory is needed.
 
 ## State machine
 
