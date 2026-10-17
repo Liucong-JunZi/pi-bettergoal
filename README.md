@@ -9,13 +9,28 @@
 - npm: https://www.npmjs.com/package/@liucong233333/pi-bettergoal
 - npm 包名 / Package name: `@liucong233333/pi-bettergoal`（npm 近似名称保护要求使用 scope / scoped name required by npm similar-name protection）
 
-## 验证截图 / Verification screenshots
+## 离线发行版 / Offline release
 
-以下是浏览器对真实测试输出及真实 Kaggle/会话记录报告的截图，**不是 Pi TUI 界面截图**。These are browser screenshots of actual verification reports, not simulated Pi UI.
+[GitHub Releases](https://github.com/Liucong-JunZi/pi-bettergoal/releases) 提供独立离线 ZIP、npm 格式 TGZ 及 SHA-256 校验文件。Offline releases include a standalone ZIP, npm-format TGZ, and SHA-256 checksums. No screenshots are included.
 
-![Nine lifecycle tests passing](https://raw.githubusercontent.com/Liucong-JunZi/pi-bettergoal/main/docs/screenshots/tests.png)
+### 中文：离线安装
 
-![Real Kaggle completion and automatic wake evidence](https://raw.githubusercontent.com/Liucong-JunZi/pi-bettergoal/main/docs/screenshots/kaggle-wake.png)
+1. 在联网机器下载 Release 的 `pi-bettergoal-0.2.1-offline.zip` 和 `SHA256SUMS`，复制到目标机器。
+2. 在同一目录执行 `shasum -a 256 -c SHA256SUMS`；如只下载 ZIP，只核对 ZIP 对应的校验行。
+3. 解压后，以绝对路径安装：
+
+```sh
+unzip pi-bettergoal-0.2.1-offline.zip -d "$HOME/pi-extensions"
+pi install "$HOME/pi-extensions/pi-bettergoal-0.2.1"
+```
+
+先移除或禁用原 `pi-goal`，然后执行 `/reload`。目标机器需已安装兼容的 Pi 和 Node.js；插件运行无额外 npm 依赖，不需要运行 `npm install`。离线指插件安装不需要访问注册表，不代表模型推理也能离线。保留解压目录，Pi 从该路径加载。
+
+### English: offline installation
+
+Download `pi-bettergoal-0.2.1-offline.zip` and `SHA256SUMS` from the release, transfer them to the target machine, verify the ZIP hash, then run the unzip/local-path install commands above. If all release assets are present, `shasum -a 256 -c SHA256SUMS` verifies them together. Remove/disable upstream pi-goal and run `/reload`.
+
+Requires an already installed compatible Pi runtime and Node.js. No additional npm runtime dependencies or `npm install` are needed. Keep the extracted directory in place. Offline installation does not imply offline model inference. The TGZ is provided for npm-compatible distribution; use the ZIP/local-path method for registry-free Pi installation.
 
 ## 中文
 

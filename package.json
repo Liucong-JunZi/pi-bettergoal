@@ -1,10 +1,15 @@
 {
   "name": "@liucong233333/pi-bettergoal",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Enhanced Pi goals with model-selected wait/wake hooks, built on Michaelliv/pi-goal. Conflicts with pi-goal; do not load both.",
   "homepage": "https://github.com/Liucong-JunZi/pi-bettergoal#readme",
-  "repository": { "type": "git", "url": "git+https://github.com/Liucong-JunZi/pi-bettergoal.git" },
-  "bugs": { "url": "https://github.com/Liucong-JunZi/pi-bettergoal/issues" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Liucong-JunZi/pi-bettergoal.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Liucong-JunZi/pi-bettergoal/issues"
+  },
   "upstream": "https://github.com/Michaelliv/pi-goal",
   "type": "commonjs",
   "keywords": [
@@ -42,8 +47,15 @@
     "pack:dry": "npm pack --dry-run"
   },
   "author": "michaelliv",
-  "contributors": ["Liucong-JunZi"],
+  "contributors": [
+    "Liucong-JunZi"
+  ],
   "license": "MIT",
-  "engines": { "node": ">=20" },
-  "publishConfig": { "access": "public", "registry": "https://registry.npmjs.org/" }
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
 }
