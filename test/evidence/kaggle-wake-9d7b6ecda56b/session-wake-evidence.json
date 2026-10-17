@@ -1,0 +1,77 @@
+[
+  {
+    "id": "b7a47890",
+    "timestamp": "2026-10-17T12:56:27.439Z",
+    "type": "state",
+    "status": "waiting",
+    "ready": null
+  },
+  {
+    "id": "c046950d",
+    "timestamp": "2026-10-17T12:56:27.449Z",
+    "type": "state",
+    "status": "waiting",
+    "ready": null
+  },
+  {
+    "id": "6b10ce04",
+    "timestamp": "2026-10-17T12:56:27.463Z",
+    "type": "event",
+    "kind": "waiting"
+  },
+  {
+    "id": "03ba0215",
+    "timestamp": "2026-10-17T12:56:52.445Z",
+    "type": "state",
+    "status": "waiting",
+    "ready": "file exists: /tmp/pi-goal-kaggle-wake/9d7b6ecda56b/finished.json"
+  },
+  {
+    "id": "517832dc",
+    "timestamp": "2026-10-17T12:56:52.446Z",
+    "type": "state",
+    "status": "active",
+    "ready": null
+  },
+  {
+    "id": "f2d955e6",
+    "timestamp": "2026-10-17T12:56:52.461Z",
+    "type": "event",
+    "kind": "resumed"
+  },
+  {
+    "id": "1747f92c",
+    "timestamp": "2026-10-17T12:57:03.092Z",
+    "type": "state",
+    "status": "active",
+    "ready": null
+  },
+  {
+    "id": "41c0fd1e",
+    "timestamp": "2026-10-17T12:57:08.003Z",
+    "type": "state",
+    "status": "active",
+    "ready": null
+  },
+  {
+    "id": "9adf1544",
+    "timestamp": "2026-10-17T12:57:21.088Z",
+    "type": "state",
+    "status": "active",
+    "ready": null
+  },
+  {
+    "id": "6251ff06",
+    "timestamp": "2026-10-17T12:57:33.880Z",
+    "type": "state",
+    "status": "active",
+    "ready": null
+  },
+  {
+    "id": "f1677b6f",
+    "timestamp": "2026-10-17T12:57:50.663Z",
+    "type": "state",
+    "status": "active",
+    "ready": null
+  }
+]

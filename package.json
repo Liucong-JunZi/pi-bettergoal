@@ -1,6 +1,6 @@
 {
   "name": "pi-goal-hooks",
-  "version": "0.1.7-hooks.1",
+  "version": "0.2.0",
   "description": "Local pi-goal fork with model-selected waiting and correlated wake hooks",
   "type": "commonjs",
   "keywords": [
@@ -15,7 +15,6 @@
     "skills/",
     "README.md",
     "HOOKS.md",
-    "test/",
     "LICENSE"
   ],
   "pi": {
@@ -39,5 +38,8 @@
     "pack:dry": "npm pack --dry-run"
   },
   "author": "michaelliv",
-  "license": "MIT"
+  "contributors": ["Liucong-JunZi"],
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "publishConfig": { "access": "public", "registry": "https://registry.npmjs.org/" }
 }

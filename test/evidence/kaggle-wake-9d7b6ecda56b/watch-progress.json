@@ -1,0 +1,14 @@
+[
+  {
+    "at": 1792241765.3057861,
+    "code": 0,
+    "stdout": "smartorz/pi-goal-wake-9d7b6ecda56b has status \"KernelWorkerStatus.RUNNING\"\n",
+    "stderr": ""
+  },
+  {
+    "at": 1792241801.629,
+    "code": 0,
+    "stdout": "smartorz/pi-goal-wake-9d7b6ecda56b has status \"KernelWorkerStatus.COMPLETE\"\n",
+    "stderr": ""
+  }
+]

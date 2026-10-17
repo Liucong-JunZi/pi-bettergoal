@@ -1,31 +1,29 @@
-# pi-goal-hooks (local fork)
+# pi-goal-hooks
 
-Based on pi-goal 0.1.7 (MIT). Adds model-selected `wait_goal` and file/timer/correlated-event wake hooks. See [HOOKS.md](HOOKS.md) for installation, safety, examples, tests and limitations. Do not load alongside upstream pi-goal. The upstream installation instructions below are retained for provenance; this fork is loaded from its local package path.
+Persistent goals for [Pi](https://pi.dev) with **model-selected suspension and event-driven wake-up**. Instead of repeatedly asking an agent to continue while it is blocked, let it wait without LLM calls until evidence arrives.
 
-![pi-goal](docs/assets/pi-goal-poster.png)
-
-Persistent autonomous goals for [pi](https://github.com/badlogic/pi-mono).
-
-`pi-goal` adds a `/goal` command and goal tools so Pi can keep working toward a long-running, thread-scoped objective until the goal is complete, paused, cleared, or token-budget-limited.
+MIT-licensed fork of [Michaelliv/pi-goal](https://github.com/Michaelliv/pi-goal), based on version 0.1.7. Targets the `@earendil-works` Pi runtime. Not tested with the older `@mariozechner` runtime.
 
 ## Install
 
-```bash
-pi install npm:pi-goal
+When published on npm:
+
+```sh
+pi install npm:pi-goal-hooks
 ```
 
-Or from git:
+For a local checkout:
 
-```bash
-pi install git:github.com/Michaelliv/pi-goal
+```sh
+pi install /absolute/path/to/pi-goal-hooks
 ```
+
+Remove/disable upstream `npm:pi-goal` first: both packages register the same commands and tools. Run `/reload` after changing packages. No project `.pi/` directory is needed. Installation alone does not start a goal or background job.
 
 ## Usage
 
 ```text
-/goal improve benchmark coverage until the suite has strong evidence
-/goal --tokens 50k finish the migration and verify tests
-/goal
+/goal --tokens 50k implement the feature and verify its acceptance tests
 /goal status
 /goal pause
 /goal resume
@@ -33,47 +31,59 @@ pi install git:github.com/Michaelliv/pi-goal
 /goal statusbar off
 ```
 
-When a goal is active, the extension shows compact visible lifecycle markers like `Goal active` and `Goal continuing`; expand them with `ctrl+o` to inspect the objective and usage. The full continuation instructions ride along as the content of that custom message, so the model always has the objective and audit guidance in the transcript while the renderer keeps the visible UI compact.
-
-The same Pi agent keeps running normal turns in the same session context until it calls `update_goal({ status: "complete" })`, the user pauses/clears it, or the token budget is reached. Reloading Pi pauses an active goal instead of silently resuming it; use `/goal resume` to continue.
-
-## What it adds
-
-- `pi-goal-writer` skill: draft and review strong `/goal` objectives with evidence-based success criteria
-- `/goal [--tokens 50k] <objective>`: set or replace a goal
-- `/goal` or `/goal status`: show the current goal
-- `/goal pause`: stop autonomous continuation without deleting the goal
-- `/goal resume`: reactivate a paused goal
-- `/goal clear`: remove the goal
-- `/goal statusbar on|off`: show or hide the footer status line
-- `create_goal` tool: model can set or replace the current goal only when explicitly requested
-- `get_goal` tool: read current goal state
-- `update_goal` tool: model can only mark the goal `complete`
-- `wait_goal`: suspend work until a registered hook or explicit user resume; waiting is not completion
-- `get_goal`, `update_goal` and `wait_goal` are only exposed to the model while a goal is `active`; paused, cleared, complete, and budget-limited goals hide them so unrelated sessions are not tempted to call them
-- footer status: `Pursuing goal`, `Goal paused`, `Goal achieved`, or `Goal unmet`
-
-## Flow
+The model can create a goal only on an explicit user request, read the active goal, mark it complete after an evidence-based audit, or suspend it with `wait_goal`.
 
 ```text
-/goal <objective>
-  -> persist goal in the current Pi session
-  -> show compact Goal marker and footer status
-  -> deliver continuation instructions as the marker's message content
-  -> trigger an agent turn
-  -> account time/tokens on turn_end
-  -> queue another continuation on agent_end while active
-  -> stop when update_goal marks complete, user pauses/clears, or budget is hit
+active -> wait_goal -> waiting -> matching hook -> active
+                              -> expiry/error -> paused
+active -> verified completion -> complete
 ```
 
-## Completion behavior
+### Wake conditions
 
-The model is instructed to audit completion against real evidence before calling `update_goal`. The `update_goal` tool deliberately accepts only `status: "complete"`; pausing, resuming, clearing, and budget limiting are controlled by the user or extension runtime. The final turn is still accounted even when the model completes the goal mid-turn.
+The following are model-facing tool arguments, not shell commands:
 
-## State
+```json
+{"kind":"file","path":"/tmp/unique-job/completed.json","reason":"Wait for the worker's completion receipt","seconds":43200}
+```
 
-Goal state is stored as Pi custom session entries with `customType: "pi-goal"`. It follows the active session branch, survives reloads, and does not require an external database.
+```json
+{"kind":"time","seconds":600,"reason":"Wait for the authorized cooldown"}
+```
 
-## License
+```json
+{"kind":"event","event":"job-123.complete","reason":"Wait for the worker extension","seconds":43200}
+```
 
-MIT
+```json
+{"kind":"manual","reason":"Need user authorization before proceeding"}
+```
+
+File waits check local filesystem metadata every five seconds; they make no model or network calls. An event producer emits `goal:wake` through `pi.events`, including the exact `goalId`, `waitId`, and event name returned by `wait_goal`. See [HOOKS.md](HOOKS.md) for the producer contract, defaults, cancellation, and limitations.
+
+A completion signal means **inspect the result**, not assume success. Waiting does not grant permission to poll services or perform new actions. This package does not install a Kaggle watcher or expose an HTTP webhook server.
+
+## Safety and lifecycle
+
+- Waiting is distinct from completion and does not queue continuation prompts.
+- User pause, clear, replacement, budget exhaustion, and shutdown cancel hooks.
+- Stale or mismatched event IDs cannot wake another wait.
+- Busy-time events latch until idle, with one wake per wait.
+- Reload/session restore pauses waiting goals; timers do not survive process exit.
+- File/event timeout pauses without waking the model; each wait is bounded to seven days.
+- A global token budget is optional; there is no semantic no-progress detector or global limit on repeated waits.
+
+## Development
+
+```sh
+npm ci --ignore-scripts --legacy-peer-deps
+npm test
+npm run check  # requires Pi on PATH; extension-loader smoke check, no model call
+npm pack --dry-run
+```
+
+Tests mock the terminal UI and scheduler; they verify actual registered lifecycle/tool handlers but are not a replacement for a live end-to-end test. A real CPU-only Kaggle notebook test also completed the cloud -> bounded background worker -> local receipt -> waiting goal -> automatic wake chain. See [the audit](test/evidence/kaggle-wake-9d7b6ecda56b/AUDIT.md) in the source checkout. Test evidence, private session transcripts, credentials and local settings are excluded from the npm archive.
+
+## License and attribution
+
+[MIT](LICENSE). Original pi-goal author: Michaelliv. Hook integration and local verification: Liucong-JunZi. Original copyright notice is preserved.

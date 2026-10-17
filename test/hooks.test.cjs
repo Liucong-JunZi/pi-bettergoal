@@ -4,7 +4,9 @@ const { mkdtempSync, writeFileSync, rmSync } = require('node:fs');
 const { tmpdir } = require('node:os');
 const { join } = require('node:path');
 const { createJiti } = require('jiti');
-const jiti = createJiti(__filename);
+const jiti = createJiti(__filename, { alias: {
+ '@earendil-works/pi-tui': join(__dirname, 'tui-stub.cjs'),
+} });
 const plugin = jiti('../.pi/extensions/pi-goal/index.ts').default;
 const { makeWait, checkWait, eventMatches } = jiti('../.pi/extensions/pi-goal/wait-hooks.ts');
 const { accountGoalTurn, createGoalState } = jiti('../.pi/extensions/pi-goal/goal-state.ts');
