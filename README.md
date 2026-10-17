@@ -6,7 +6,8 @@
 
 - 本仓库 / Repository: https://github.com/Liucong-JunZi/pi-bettergoal
 - 上游基础 / Based on: https://github.com/Michaelliv/pi-goal (MIT, based on npm version 0.1.7)
-- npm: https://www.npmjs.com/package/pi-bettergoal
+- npm: https://www.npmjs.com/package/@liucong233333/pi-bettergoal
+- npm 包名 / Package name: `@liucong233333/pi-bettergoal`（npm 近似名称保护要求使用 scope / scoped name required by npm similar-name protection）
 
 ## 验证截图 / Verification screenshots
 
@@ -28,7 +29,7 @@
 
 ```sh
 pi remove npm:pi-goal
-pi install npm:pi-bettergoal
+pi install npm:@liucong233333/pi-bettergoal
 ```
 
 如果原包通过 git 或本地路径安装，请移除对应来源，而不是只执行上面的 npm 移除命令。**个人级和项目级配置都不能重复加载两个包**。安装后执行 `/reload`。安装本身不会启动目标或后台任务。
@@ -92,7 +93,7 @@ active → 验证目标完成 → complete
 - 工具未出现：执行 `/reload`，确认只启用一个 goal 包；`wait_goal` 仅在目标 active 时可见。
 - 任务完成却未唤醒：确认 Pi 进程仍运行、路径正确、等待未过期，或事件携带正确的三个匹配字段。
 - `exists` 请使用每次运行独立的回执路径，避免旧文件误触发。唤醒后仍需核对回执身份与实际结果。
-- 回退：卸载 `npm:pi-bettergoal` 后重新安装 `npm:pi-goal`，然后 `/reload`；不要同时启用。
+- 回退：卸载 `npm:@liucong233333/pi-bettergoal` 后重新安装 `npm:pi-goal`，然后 `/reload`；不要同时启用。
 
 详细 API、事件生产者协议和限制见 [HOOKS.md](HOOKS.md)。
 
@@ -108,7 +109,7 @@ This is an independent MIT-licensed enhancement built on [Michaelliv/pi-goal](ht
 
 ```sh
 pi remove npm:pi-goal
-pi install npm:pi-bettergoal
+pi install npm:@liucong233333/pi-bettergoal
 ```
 
 If upstream was installed from git or a local path, remove that source instead. Check both personal and project settings for duplicate loading. Run `/reload` after changing packages. Installation does not start a goal or a background job.
