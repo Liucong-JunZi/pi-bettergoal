@@ -1,141 +1,32 @@
 # pi-bettergoal
 
-[中文](#中文) · [English](#english)
+**English** | [简体中文](README.zh-CN.md)
 
-> **⚠️ 冲突 / Conflict:** `pi-bettergoal` 与 [`pi-goal`](https://github.com/Michaelliv/pi-goal) 注册相同的 `/goal` 命令及工具，**不能同时启用**。安装前请卸载或禁用原包。 Both packages register the same commands and tools. **Do not enable them together.** Remove or disable upstream first.
+Persistent goals for [Pi](https://pi.dev) with **model-selected suspension and condition-driven wake-up**. Stop sending repeated “continue” prompts while waiting for an external job—waiting itself makes no model calls.
 
-- 本仓库 / Repository: https://github.com/Liucong-JunZi/pi-bettergoal
-- 上游基础 / Based on: https://github.com/Michaelliv/pi-goal (MIT, based on npm version 0.1.7)
-- npm: https://www.npmjs.com/package/@liucong233333/pi-bettergoal
-- npm 包名 / Package name: `@liucong233333/pi-bettergoal`（npm 近似名称保护要求使用 scope / scoped name required by npm similar-name protection）
+## Online installation (recommended)
 
-## 离线发行版 / Offline release
-
-[GitHub Releases](https://github.com/Liucong-JunZi/pi-bettergoal/releases) 提供独立离线 ZIP、npm 格式 TGZ 及 SHA-256 校验文件。Offline releases include a standalone ZIP, npm-format TGZ, and SHA-256 checksums. No screenshots are included.
-
-### 中文：离线安装
-
-1. 在联网机器下载 Release 的 `pi-bettergoal-0.2.1-offline.zip` 和 `SHA256SUMS`，复制到目标机器。
-2. 在同一目录执行 `shasum -a 256 -c SHA256SUMS`；如只下载 ZIP，只核对 ZIP 对应的校验行。
-3. 解压后，以绝对路径安装：
+> **Conflict:** `pi-bettergoal` and [`pi-goal`](https://github.com/Michaelliv/pi-goal) register the same `/goal` command and goal tools. **Do not enable both.** Remove or disable upstream pi-goal before installing.
 
 ```sh
-unzip pi-bettergoal-0.2.1-offline.zip -d "$HOME/pi-extensions"
-pi install "$HOME/pi-extensions/pi-bettergoal-0.2.1"
-```
-
-先移除或禁用原 `pi-goal`，然后执行 `/reload`。目标机器需已安装兼容的 Pi 和 Node.js；插件运行无额外 npm 依赖，不需要运行 `npm install`。离线指插件安装不需要访问注册表，不代表模型推理也能离线。保留解压目录，Pi 从该路径加载。
-
-### English: offline installation
-
-Download `pi-bettergoal-0.2.1-offline.zip` and `SHA256SUMS` from the release, transfer them to the target machine, verify the ZIP hash, then run the unzip/local-path install commands above. If all release assets are present, `shasum -a 256 -c SHA256SUMS` verifies them together. Remove/disable upstream pi-goal and run `/reload`.
-
-Requires an already installed compatible Pi runtime and Node.js. No additional npm runtime dependencies or `npm install` are needed. Keep the extracted directory in place. Offline installation does not imply offline model inference. The TGZ is provided for npm-compatible distribution; use the ZIP/local-path method for registry-free Pi installation.
-
-## 中文
-
-为 [Pi](https://pi.dev) 提供持久化目标，以及**模型自主挂起、条件满足后自动唤醒**。等待后台任务时不再反复发送 Continue，不消耗等待期间的模型调用。
-
-这是基于 **Michaelliv/pi-goal** 的增强版本，不是上游官方发行版。保留原作者署名与 MIT 许可证。当前针对 `@earendil-works` Pi 运行时；未验证旧版 `@mariozechner` 运行时。
-
-### 安装
-
-先卸载原包（或在 Pi 配置中禁用其全部扩展和 skills）：
-
-```sh
+# If upstream pi-goal was installed from npm, remove it first.
 pi remove npm:pi-goal
 pi install npm:@liucong233333/pi-bettergoal
 ```
 
-如果原包通过 git 或本地路径安装，请移除对应来源，而不是只执行上面的 npm 移除命令。**个人级和项目级配置都不能重复加载两个包**。安装后执行 `/reload`。安装本身不会启动目标或后台任务。
+Then run `/reload` in Pi. If upstream was installed from git or a local path, remove that source instead. Check **both personal and project settings** for duplicate loading. Installation does not start a goal or a background job.
 
-也可以从本仓库安装：
+Alternatively, install directly from GitHub:
 
 ```sh
 pi install git:github.com/Liucong-JunZi/pi-bettergoal
 ```
 
-### 使用
+Requires a compatible Pi runtime and Node.js 20+. This package targets the `@earendil-works` Pi runtime; the older `@mariozechner` runtime has not been tested.
 
-```text
-/goal --tokens 50k 实现功能并验证验收测试
-/goal status
-/goal pause
-/goal resume
-/goal clear
-/goal statusbar off
-```
+**Links:** [npm](https://www.npmjs.com/package/@liucong233333/pi-bettergoal) · [GitHub Releases](https://github.com/Liucong-JunZi/pi-bettergoal/releases) · [Hook API](HOOKS.md) · [Upstream pi-goal](https://github.com/Michaelliv/pi-goal)
 
-模型只在用户明确要求目标模式时创建目标。完成前必须核查实际证据；遇到外部阻塞时，可调用新的 `wait_goal`，而不是冒用完成状态来停止。
-
-```text
-active → wait_goal → waiting → 匹配 hook → active
-                           → 超时/错误 → paused
-active → 验证目标完成 → complete
-```
-
-以下是模型工具参数示例，不是 shell 命令：
-
-```json
-{"kind":"file","path":"/tmp/unique-job/completed.json","reason":"等待后台任务写入独立完成回执","seconds":43200}
-```
-
-支持：文件出现/元数据变化、定时器、相关联的扩展事件、人工恢复。文件检查间隔 5 秒，不调用模型、shell 或网络。扩展事件必须匹配目标 ID、等待 ID 和事件名。
-
-**唤醒只代表需要检查结果，不代表任务成功。** 本包不自带 Kaggle 监控，也不启动 HTTP webhook 服务。需要独立且获授权的后台进程写完成文件，或扩展发送事件。
-
-### 安全边界
-
-- 用户暂停、清除、替换目标、预算耗尽或退出会取消 hook。
-- 旧事件不能唤醒新的等待；忙碌期间收到事件会暂存，空闲后唤醒一次。
-- reload、重启恢复和分支导航不会自动继续原等待目标。
-- 文件/事件等待到期会暂停，不唤醒模型；单次等待最长 7 天。
-- 不绕过用户授权；没有全局语义空转检测，建议需要时设置 token 预算。
-
-已通过真实 CPU-only Kaggle 本子 → 有界后台监控 → 完成文件 → 模型挂起/自动唤醒测试。它不是正式比赛评分测试，也不证明重启后能持续监控。
-
-### 参数与排障
-
-| 参数 | 说明 |
-|---|---|
-| `reason` | 必填，描述具体阻塞和期待证据 |
-| `kind` | `file`、`time`、`event` 或 `manual` |
-| `seconds` | 1–604800；文件/事件默认 86400，人工默认 604800；定时器建议显式提供 |
-| `path` | 文件等待路径，支持相对当前工作目录或绝对路径 |
-| `fileMode` | `exists`（默认）或 `changed`；changed 是元数据变化，不是语义内容比较 |
-| `event` | 扩展事件名，事件等待时必填 |
-
-- 工具未出现：执行 `/reload`，确认只启用一个 goal 包；`wait_goal` 仅在目标 active 时可见。
-- 任务完成却未唤醒：确认 Pi 进程仍运行、路径正确、等待未过期，或事件携带正确的三个匹配字段。
-- `exists` 请使用每次运行独立的回执路径，避免旧文件误触发。唤醒后仍需核对回执身份与实际结果。
-- 回退：卸载 `npm:@liucong233333/pi-bettergoal` 后重新安装 `npm:pi-goal`，然后 `/reload`；不要同时启用。
-
-详细 API、事件生产者协议和限制见 [HOOKS.md](HOOKS.md)。
-
-## English
-
-Persistent goals for [Pi](https://pi.dev) with **model-selected suspension and condition-driven wake-up**. Avoid repeated continuation turns while blocked on an external job.
-
-This is an independent MIT-licensed enhancement built on [Michaelliv/pi-goal](https://github.com/Michaelliv/pi-goal), based on npm version 0.1.7, not an official upstream release. Original attribution is preserved. Targets the `@earendil-works` Pi runtime; not tested with the older `@mariozechner` runtime.
-
-### Installation and conflicts
-
-**Remove or disable upstream pi-goal before enabling this package.** Both register `/goal`, `create_goal`, `get_goal`, and `update_goal`. Loading both is unsupported; this package additionally registers `wait_goal`.
-
-```sh
-pi remove npm:pi-goal
-pi install npm:@liucong233333/pi-bettergoal
-```
-
-If upstream was installed from git or a local path, remove that source instead. Check both personal and project settings for duplicate loading. Run `/reload` after changing packages. Installation does not start a goal or a background job.
-
-Alternatively:
-
-```sh
-pi install git:github.com/Liucong-JunZi/pi-bettergoal
-```
-
-### Usage
+## Quick start
 
 ```text
 /goal --tokens 50k implement the feature and verify acceptance tests
@@ -143,9 +34,10 @@ pi install git:github.com/Liucong-JunZi/pi-bettergoal
 /goal pause
 /goal resume
 /goal clear
+/goal statusbar off
 ```
 
-The model creates goals only when explicitly requested and completes them only after an evidence-based audit. `wait_goal` suspends an active goal without falsely declaring success.
+The model creates goals **only when explicitly requested** and completes them only after an evidence-based audit. When blocked on an external job, `wait_goal` suspends an active goal without falsely declaring success.
 
 ```text
 active -> wait_goal -> waiting -> matching hook -> active
@@ -153,7 +45,17 @@ active -> wait_goal -> waiting -> matching hook -> active
 active -> verified completion -> complete
 ```
 
-Example model-facing arguments, not shell commands:
+### Waiting for an external job
+
+Example model-facing `wait_goal` arguments—not shell commands:
+
+```json
+{"kind":"file","path":"/tmp/unique-job/completed.json","reason":"Wait for the worker's unique completion receipt","seconds":43200}
+```
+
+Use a **unique receipt path per job** to avoid triggering on an old file. A separately authorized background worker must produce the receipt; this package does not launch the worker for you.
+
+Other supported wait types:
 
 ```json
 {"kind":"time","seconds":600,"reason":"Wait for the authorized cooldown"}
@@ -167,24 +69,63 @@ Example model-facing arguments, not shell commands:
 {"kind":"manual","reason":"Need user authorization before proceeding"}
 ```
 
-File waits inspect local metadata every five seconds without LLM, shell or network calls. Event producers emit `goal:wake` via `pi.events` with the exact `goalId`, `waitId`, and event name returned by `wait_goal`. See [HOOKS.md](HOOKS.md) for the full contract.
+File waits inspect local metadata every five seconds without model, shell or network calls. Event producers emit `goal:wake` via `pi.events` with the exact `goalId`, `waitId`, and event name returned by `wait_goal`. See [HOOKS.md](HOOKS.md) for the full contract.
 
-A completion signal means **inspect the result**, not assume success. This package neither installs a Kaggle watcher nor opens an HTTP webhook endpoint. Use a separately authorized worker or extension.
+**A wake-up means inspect the result, not assume success.** This package neither installs a Kaggle watcher nor opens an HTTP webhook endpoint. Use a separately authorized worker or extension.
 
-### Lifecycle and safety
+## Lifecycle and safety
 
 - Waiting is not completion and does not queue continuation prompts.
 - Pause, clear, replacement, budget exhaustion and shutdown cancel hooks.
-- Stale/mismatched event IDs are ignored; busy-time readiness is latched for one wake after idle.
-- Reload/session restore pauses waiting goals. Branch navigation pauses restored active/waiting goals.
+- Stale or mismatched event IDs are ignored; readiness received while busy is saved for one wake after idle.
+- Reload and session restore pause waiting goals. Branch navigation pauses restored active or waiting goals.
 - File/event expiry pauses without waking the model; each wait is bounded to seven days.
-- No semantic no-progress detector or global cap on repeated waits; use an explicit token budget when required.
+- User authorization is still required. There is no semantic no-progress detector or global cap on repeated waits; use an explicit token budget when required.
 
-### Troubleshooting
+### Monitor cleanup
 
-Run `/reload` after installation and ensure upstream pi-goal is disabled in both personal and project settings. `wait_goal` is visible only for active goals. Pi must remain running for timers/watchers to operate. Use a unique receipt path per job: `exists` does not validate file contents, and `changed` includes deletion/metadata changes. On wake, verify job identity and result. To roll back, remove this package, reinstall upstream, and reload; never enable both together.
+The extension's watcher runs inside Pi, not as a separate process. Leaving the waiting state clears its polling timer and event subscription; session shutdown, switching and branch navigation also disarm hooks. The timer is `unref`'d so it does not keep Node.js alive on its own. Manual waits start no watcher.
 
-### Development / 开发
+**External worker processes are not managed or killed by this extension.** Pausing a goal or exiting Pi does not terminate a separately launched monitor. Such workers need their own completion/error exits, timeouts and cancellation policy. The Kaggle test worker in this repository exits on success or terminal failure, limits itself to 40 checks with 30-second intervals, and gives status/download commands 35/90-second timeouts. This is test-worker behavior, not a guarantee for arbitrary workers.
+
+If readiness is observed while Pi is busy, the extension keeps the signal and waits for idle before waking; the original deadline does not discard an already observed signal. Explicit cancellation still cleans up the hook.
+
+## Wait parameters
+
+| Parameter | Description |
+|---|---|
+| `reason` | Required; describe the specific blocker and expected evidence. |
+| `kind` | `file`, `time`, `event`, or `manual`. |
+| `seconds` | 1–604800; file/event default to 86400, manual to 604800. Set explicitly for timers. |
+| `path` | File-wait path, absolute or relative to the current working directory. |
+| `fileMode` | `exists` (default) or `changed`; the latter checks metadata changes, not semantic content. |
+| `event` | Extension event name; required for event waits. |
+
+## Offline installation
+
+[GitHub Releases](https://github.com/Liucong-JunZi/pi-bettergoal/releases) provide a standalone ZIP, an npm-format TGZ, and `SHA256SUMS`.
+
+1. Download `pi-bettergoal-0.2.1-offline.zip` and `SHA256SUMS` on a connected machine, then transfer them to the target machine.
+2. Verify the ZIP against its entry in `SHA256SUMS`. If all listed assets are present, run `shasum -a 256 -c SHA256SUMS` to verify them together.
+3. Extract and install using an absolute path:
+
+```sh
+unzip pi-bettergoal-0.2.1-offline.zip -d "$HOME/pi-extensions"
+pi install "$HOME/pi-extensions/pi-bettergoal-0.2.1"
+```
+
+Remove or disable upstream pi-goal first, then run `/reload` after installation. The target machine must already have a compatible Pi runtime and Node.js. No additional npm runtime dependencies or `npm install` are needed. **Keep the extracted directory in place**: Pi loads the package from that path.
+
+Offline installation means no registry access is needed to install this extension—not that model inference works offline. The TGZ is supplied for npm-compatible distribution; use the ZIP/local-path method for registry-free Pi installation.
+
+## Troubleshooting
+
+- **Tools missing:** Run `/reload` and ensure only one goal package is enabled. `wait_goal` is visible only for active goals.
+- **Job finished but no wake-up:** Pi must remain running. Check the receipt path, wait expiry, or all three matching event fields.
+- **Unexpected file wake-up:** `exists` does not validate file contents; `changed` includes deletion and metadata changes. Use unique paths, then verify job identity and actual results after waking.
+- **Roll back to upstream:** Remove `npm:@liucong233333/pi-bettergoal`, reinstall `npm:pi-goal`, then run `/reload`. Never enable both together.
+
+## Development and verification
 
 ```sh
 npm ci --ignore-scripts --legacy-peer-deps
@@ -193,8 +134,12 @@ npm run check  # requires Pi on PATH; loader smoke check, no model call
 npm pack --dry-run
 ```
 
-Nine tests mock the terminal UI and scheduler while exercising actual extension handlers. A real CPU-only Kaggle run also completed cloud execution -> bounded worker -> receipt -> automatic wake. [Live test audit](test/evidence/kaggle-wake-9d7b6ecda56b/AUDIT.md) (source checkout only). Test evidence, private session transcripts, credentials and local settings are excluded from the npm archive.
+Nine tests mock the terminal UI and scheduler while exercising actual extension handlers. A real CPU-only Kaggle run also completed cloud execution → bounded worker → receipt → automatic wake. See the [live test audit](test/evidence/kaggle-wake-9d7b6ecda56b/AUDIT.md) (source checkout only). This was not an official competition scoring test and does not establish monitoring across restarts.
 
-## License / 许可证
+Test evidence, private session transcripts, credentials and local settings are excluded from the npm archive.
 
-[MIT](LICENSE). Original pi-goal author: Michaelliv. Hook integration and verification: Liucong-JunZi. Original copyright notice is preserved.
+## Attribution and license
+
+An independent enhancement of [Michaelliv/pi-goal](https://github.com/Michaelliv/pi-goal), based on npm version 0.1.7—not an official upstream release.
+
+[MIT](LICENSE). Original pi-goal author: Michaelliv. Hook integration and verification: Liucong-JunZi. Original attribution and copyright notice are preserved.
