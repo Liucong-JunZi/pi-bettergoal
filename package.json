@@ -1,0 +1,43 @@
+{
+  "name": "pi-goal-hooks",
+  "version": "0.1.7-hooks.1",
+  "description": "Local pi-goal fork with model-selected waiting and correlated wake hooks",
+  "type": "commonjs",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "coding-agent",
+    "goal",
+    "automation"
+  ],
+  "files": [
+    ".pi/",
+    "skills/",
+    "README.md",
+    "HOOKS.md",
+    "test/",
+    "LICENSE"
+  ],
+  "pi": {
+    "extensions": [
+      ".pi/extensions/pi-goal"
+    ],
+    "skills": [
+      "skills"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  },
+  "devDependencies": {
+    "jiti": "^2.7.0"
+  },
+  "scripts": {
+    "check": "pi --no-extensions -e ./.pi/extensions/pi-goal/index.ts --list-models __pi_goal_load_check__",
+    "test": "node --test test/**/*.test.cjs",
+    "pack:dry": "npm pack --dry-run"
+  },
+  "author": "michaelliv",
+  "license": "MIT"
+}
