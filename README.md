@@ -121,13 +121,13 @@ If readiness is observed while Pi is busy, the extension keeps the signal and wa
 
 [GitHub Releases](https://github.com/Liucong-JunZi/pi-bettergoal/releases) provide a standalone ZIP, an npm-format TGZ, and `SHA256SUMS`.
 
-1. Download `pi-bettergoal-0.3.0-offline.zip` and `SHA256SUMS` on a connected machine, then transfer them to the target machine.
+1. Download `pi-bettergoal-0.3.2-offline.zip` and `SHA256SUMS` on a connected machine, then transfer them to the target machine.
 2. Verify the ZIP against its entry in `SHA256SUMS`. If all listed assets are present, run `shasum -a 256 -c SHA256SUMS` to verify them together.
 3. Extract and install using an absolute path:
 
 ```sh
-unzip pi-bettergoal-0.3.0-offline.zip -d "$HOME/pi-extensions"
-pi install "$HOME/pi-extensions/pi-bettergoal-0.3.0"
+unzip pi-bettergoal-0.3.2-offline.zip -d "$HOME/pi-extensions"
+pi install "$HOME/pi-extensions/pi-bettergoal-0.3.2"
 ```
 
 Remove or disable upstream pi-goal first, then run `/reload` after installation. The target machine must already have a compatible Pi runtime and Node.js. No additional npm runtime dependencies or `npm install` are needed. **Keep the extracted directory in place**: Pi loads the package from that path.

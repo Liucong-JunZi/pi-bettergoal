@@ -123,13 +123,13 @@ active → 验证目标完成 → complete
 
 [GitHub Releases](https://github.com/Liucong-JunZi/pi-bettergoal/releases) 提供独立离线 ZIP、npm 格式 TGZ 和 `SHA256SUMS` 校验文件。
 
-1. 在联网机器下载 `pi-bettergoal-0.3.0-offline.zip` 和 `SHA256SUMS`，复制到目标机器。
+1. 在联网机器下载 `pi-bettergoal-0.3.2-offline.zip` 和 `SHA256SUMS`，复制到目标机器。
 2. 核对 `SHA256SUMS` 中 ZIP 对应的校验行。如果已下载全部列出的文件，可执行 `shasum -a 256 -c SHA256SUMS` 一起校验。
 3. 解压后，以绝对路径安装：
 
 ```sh
-unzip pi-bettergoal-0.3.0-offline.zip -d "$HOME/pi-extensions"
-pi install "$HOME/pi-extensions/pi-bettergoal-0.3.0"
+unzip pi-bettergoal-0.3.2-offline.zip -d "$HOME/pi-extensions"
+pi install "$HOME/pi-extensions/pi-bettergoal-0.3.2"
 ```
 
 先移除或禁用原 `pi-goal`，安装后执行 `/reload`。目标机器需已安装兼容的 Pi 和 Node.js；插件运行无额外 npm 依赖，不需要执行 `npm install`。**请保留解压目录**，Pi 从该路径加载插件。
