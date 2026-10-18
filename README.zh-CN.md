@@ -73,6 +73,24 @@ active → 验证目标完成 → complete
 
 **唤醒只代表需要检查结果，不代表任务成功。** 本包不自带 Kaggle 监控，也不启动 HTTP webhook 服务。请使用独立且获授权的后台进程或扩展。
 
+## 模型可调用的目标操作
+
+| 工具 | 作用 |
+|---|---|
+| `create_goal` | 用户明确要求时创建/替换目标 |
+| `get_goal` | 查看任意状态，包括 waiting/paused，不会恢复执行 |
+| `wait_goal` | 登记文件/定时器/事件/人工等待 |
+| `pause_goal` | 暂停、取消 hook，不标记完成 |
+| `resume_goal` | 用户明确授权后恢复等待/暂停目标 |
+| `clear_goal` | 用户明确要求时清除目标并取消 hook |
+| `achieve_goal` | 证据审计后完成，参数 `status: "complete"` |
+| `update_goal` | 保留兼容的完成工具 |
+| `set_goal_statusbar` | 用 `enabled` 布尔值控制状态栏 |
+
+查看、暂停、恢复、清除、状态栏工具在 waiting/paused 时仍可用，无需强制用户输入斜杠命令。暂停/恢复/清除需要具体 `reason`。完成和等待工具仅在 active 时显示。恢复会取消原等待，不重启旧监控；已完成或耗尽 token 预算的目标不能恢复。
+
+自动 Continue 和无关聊天不是恢复授权。明确授权是模型行为规则，不是强制人工确认弹窗。完成工具不自动验证证据，仍由模型执行完成审计。
+
 ## 生命周期与安全边界
 
 - 等待不是完成，也不会排队发送继续提示。
@@ -105,13 +123,13 @@ active → 验证目标完成 → complete
 
 [GitHub Releases](https://github.com/Liucong-JunZi/pi-bettergoal/releases) 提供独立离线 ZIP、npm 格式 TGZ 和 `SHA256SUMS` 校验文件。
 
-1. 在联网机器下载 `pi-bettergoal-0.2.1-offline.zip` 和 `SHA256SUMS`，复制到目标机器。
+1. 在联网机器下载 `pi-bettergoal-0.3.0-offline.zip` 和 `SHA256SUMS`，复制到目标机器。
 2. 核对 `SHA256SUMS` 中 ZIP 对应的校验行。如果已下载全部列出的文件，可执行 `shasum -a 256 -c SHA256SUMS` 一起校验。
 3. 解压后，以绝对路径安装：
 
 ```sh
-unzip pi-bettergoal-0.2.1-offline.zip -d "$HOME/pi-extensions"
-pi install "$HOME/pi-extensions/pi-bettergoal-0.2.1"
+unzip pi-bettergoal-0.3.0-offline.zip -d "$HOME/pi-extensions"
+pi install "$HOME/pi-extensions/pi-bettergoal-0.3.0"
 ```
 
 先移除或禁用原 `pi-goal`，安装后执行 `/reload`。目标机器需已安装兼容的 Pi 和 Node.js；插件运行无额外 npm 依赖，不需要执行 `npm install`。**请保留解压目录**，Pi 从该路径加载插件。
@@ -134,7 +152,7 @@ npm run check  # 需要 PATH 中有 Pi；仅检查扩展加载，不调用模型
 npm pack --dry-run
 ```
 
-9 个测试通过模拟终端 UI 与调度器来验证实际扩展处理器。另已通过真实 CPU-only Kaggle 本子 → 有界后台监控 → 完成文件 → 模型自动唤醒测试。参见[实际测试审计](test/evidence/kaggle-wake-9d7b6ecda56b/AUDIT.md)（仅源码仓库包含）。它不是正式比赛评分测试，也不证明重启后能持续监控。
+12 个测试通过模拟终端 UI 与调度器来验证实际扩展处理器。另已通过真实 CPU-only Kaggle 本子 → 有界后台监控 → 完成文件 → 模型自动唤醒测试。参见[实际测试审计](test/evidence/kaggle-wake-9d7b6ecda56b/AUDIT.md)（仅源码仓库包含）。它不是正式比赛评分测试，也不证明重启后能持续监控。
 
 测试证据、私有会话记录、凭据和本地配置不包含在 npm 包中。
 

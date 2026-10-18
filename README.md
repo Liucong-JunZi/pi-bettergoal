@@ -73,6 +73,22 @@ File waits inspect local metadata every five seconds without model, shell or net
 
 **A wake-up means inspect the result, not assume success.** This package neither installs a Kaggle watcher nor opens an HTTP webhook endpoint. Use a separately authorized worker or extension.
 
+## Model-callable goal operations
+
+| Tool | Operation |
+|---|---|
+| `create_goal` | Create/replace only on explicit user request |
+| `get_goal` | Inspect all states, including waiting/paused; does not resume |
+| `wait_goal` | Suspend with file/time/event/manual condition |
+| `pause_goal` | Pause and cancel hooks, without marking complete |
+| `resume_goal` | Resume waiting/paused goal on explicit user authorization |
+| `clear_goal` | Clear on explicit user request and cancel hooks |
+| `achieve_goal` | Complete after evidence audit; requires `status: "complete"` |
+| `update_goal` | Backward-compatible completion alias |
+| `set_goal_statusbar` | Set footer visibility with `enabled` boolean |
+
+Inspection and lifecycle controls remain exposed while waiting/paused, so the user need not type slash commands. Pause/resume/clear require a concrete `reason`. Completion and wait tools are active-only. Resume cancels the old wait, not restarts its watcher. Completed or token-exhausted goals cannot resume. Automatic Continue messages and unrelated chat are not user authorization. Explicit-authorization rules are model-facing policy, not an enforced human approval dialog. `achieve_goal` and `update_goal` do not assess evidence automatically; the model must audit it.
+
 ## Lifecycle and safety
 
 - Waiting is not completion and does not queue continuation prompts.
@@ -105,13 +121,13 @@ If readiness is observed while Pi is busy, the extension keeps the signal and wa
 
 [GitHub Releases](https://github.com/Liucong-JunZi/pi-bettergoal/releases) provide a standalone ZIP, an npm-format TGZ, and `SHA256SUMS`.
 
-1. Download `pi-bettergoal-0.2.1-offline.zip` and `SHA256SUMS` on a connected machine, then transfer them to the target machine.
+1. Download `pi-bettergoal-0.3.0-offline.zip` and `SHA256SUMS` on a connected machine, then transfer them to the target machine.
 2. Verify the ZIP against its entry in `SHA256SUMS`. If all listed assets are present, run `shasum -a 256 -c SHA256SUMS` to verify them together.
 3. Extract and install using an absolute path:
 
 ```sh
-unzip pi-bettergoal-0.2.1-offline.zip -d "$HOME/pi-extensions"
-pi install "$HOME/pi-extensions/pi-bettergoal-0.2.1"
+unzip pi-bettergoal-0.3.0-offline.zip -d "$HOME/pi-extensions"
+pi install "$HOME/pi-extensions/pi-bettergoal-0.3.0"
 ```
 
 Remove or disable upstream pi-goal first, then run `/reload` after installation. The target machine must already have a compatible Pi runtime and Node.js. No additional npm runtime dependencies or `npm install` are needed. **Keep the extracted directory in place**: Pi loads the package from that path.
@@ -134,7 +150,7 @@ npm run check  # requires Pi on PATH; loader smoke check, no model call
 npm pack --dry-run
 ```
 
-Nine tests mock the terminal UI and scheduler while exercising actual extension handlers. A real CPU-only Kaggle run also completed cloud execution → bounded worker → receipt → automatic wake. See the [live test audit](test/evidence/kaggle-wake-9d7b6ecda56b/AUDIT.md) (source checkout only). This was not an official competition scoring test and does not establish monitoring across restarts.
+Twelve tests mock the terminal UI and scheduler while exercising actual extension handlers. A real CPU-only Kaggle run also completed cloud execution → bounded worker → receipt → automatic wake. See the [live test audit](test/evidence/kaggle-wake-9d7b6ecda56b/AUDIT.md) (source checkout only). This was not an official competition scoring test and does not establish monitoring across restarts.
 
 Test evidence, private session transcripts, credentials and local settings are excluded from the npm archive.
 

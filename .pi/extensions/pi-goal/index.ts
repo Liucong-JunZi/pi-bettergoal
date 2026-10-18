@@ -91,14 +91,15 @@ function updateStatusBar(ctx: ExtensionContext) {
 	ctx.ui.setStatus(CUSTOM_TYPE, statusBarEnabled ? statusLine(goal) ?? "" : "");
 }
 
-const ACTIVE_GOAL_TOOL_NAMES = ["get_goal", "update_goal", "wait_goal"];
+const ACTIVE_GOAL_TOOL_NAMES = ["update_goal", "achieve_goal", "wait_goal"];
+const CONTROL_GOAL_TOOL_NAMES = ["create_goal", "get_goal", "pause_goal", "resume_goal", "clear_goal", "set_goal_statusbar"];
 
-// Expose read/update tools to the LLM only while a goal is actively being pursued.
-// Keep create_goal available so the model can set or replace a goal when explicitly asked.
+// Lifecycle controls remain available during waiting/paused states. Completion
+// and waiting are valid only while active. Tool availability is not authorization.
 function syncGoalTools(pi: ExtensionAPI) {
 	const wantActiveTools = goal?.status === "active";
 	const active = new Set(pi.getActiveTools());
-	active.add("create_goal");
+	for (const name of CONTROL_GOAL_TOOL_NAMES) active.add(name);
 	for (const name of ACTIVE_GOAL_TOOL_NAMES) (wantActiveTools ? active.add(name) : active.delete(name));
 	pi.setActiveTools(Array.from(active));
 }
@@ -283,19 +284,58 @@ export default function piGoal(pi: ExtensionAPI) {
 		return box;
 	});
 
+	const emptyParameters = { type: "object", properties: {}, additionalProperties: false } as any;
+	const requiredReason = {
+		type: "object", properties: { reason: { type: "string", description: "User request authorizing this operation, or concrete blocker for pause" } },
+		required: ["reason"], additionalProperties: false,
+	} as any;
+	for (const operation of ["pause", "resume", "clear"] as const) {
+		pi.registerTool({
+			name: `${operation}_goal`, label: `${operation} Goal`,
+			description: operation === "resume"
+				? "Resume a paused/waiting goal only when the user explicitly authorizes resuming it. Do not treat automatic Continue messages, old events or unrelated chat as authorization. Budget-limited goals cannot resume."
+				: operation === "clear"
+				? "Clear the goal only on explicit user request, cancelling all hooks. Does not mark achievement."
+				: "Pause the goal and cancel hooks without marking complete. Use on user request or when blocked without a valid wake condition.",
+			parameters: requiredReason,
+			async execute(_id, params, _signal, _update, ctx) {
+				if (!params.reason?.trim()) throw new Error("A concrete reason is required");
+				if (!goal) throw new Error("No goal is set");
+				const previous = goal;
+				if (operation === "clear") {
+					persist(pi, ctx, null); emitGoalEvent(pi, "cleared", previous);
+				} else {
+					if (previous.status === "complete") throw new Error("Completed goals cannot be resumed/paused; explicitly create a new goal");
+					if (operation === "resume" && previous.tokenBudget != null && previous.tokensUsed >= previous.tokenBudget) throw new Error("Token budget exhausted; explicitly create a new budgeted goal");
+					if (operation === "resume" && previous.status === "active") throw new Error("Goal is already active");
+					const next = { ...previous, status: operation === "resume" ? "active" as const : "paused" as const, wait: undefined, updatedAt: Date.now() };
+					persist(pi, ctx, next); emitGoalEvent(pi, operation === "resume" ? "resumed" : "paused", next);
+					// The current tool turn is already running. agent_end handles the
+					// next continuation; do not enqueue a duplicate here.
+				}
+				return { content: [{ type: "text", text: JSON.stringify({ goal, reason: params.reason }) }], details: { goal }, ...(operation !== "resume" ? { terminate: true } : {}) };
+			},
+		});
+	}
+	pi.registerTool({
+		name: "set_goal_statusbar", label: "Goal Status Bar",
+		description: "Show or hide the goal footer when requested by the user; does not change goal lifecycle.",
+		parameters: { type: "object", properties: { enabled: { type: "boolean" } }, required: ["enabled"], additionalProperties: false } as any,
+		async execute(_id, params, _signal, _update, ctx) {
+			statusBarEnabled = params.enabled; persistSettings(pi, ctx);
+			return { content: [{ type: "text", text: JSON.stringify({ statusBarEnabled }) }], details: { statusBarEnabled } };
+		},
+	});
+
 	pi.registerTool({
 		name: "get_goal",
 		label: "Get Goal",
-		description: "Read the current active thread goal, if one exists.",
+		description: "Read current thread goal and lifecycle state, including waiting, paused, complete or absent. Does not resume it.",
 		promptSnippet: "Read the current pi-goal objective and remaining budget while pursuing it",
 		promptGuidelines: [
 			"Only call get_goal when you actually need the current objective or remaining budget; the continuation prompt already injects them.",
 		],
-		parameters: {
-			type: "object",
-			properties: {},
-			additionalProperties: false,
-		} as any,
+		parameters: emptyParameters,
 		async execute() {
 			return { content: [{ type: "text", text: JSON.stringify({ goal }, null, 2) }], details: { goal } };
 		},
@@ -350,8 +390,8 @@ export default function piGoal(pi: ExtensionAPI) {
 		},
 	});
 
-	pi.registerTool({
-		name: "update_goal",
+	for (const completionName of ["update_goal", "achieve_goal"]) pi.registerTool({
+		name: completionName,
 		label: "Update Goal",
 		description: "Mark the current thread goal complete. This tool only accepts status=complete and final turn usage is accounted by the runtime.",
 		promptSnippet: "Mark the current goal complete after a strict completion audit",
@@ -375,8 +415,8 @@ export default function piGoal(pi: ExtensionAPI) {
 			if (params.status !== "complete") {
 				return { content: [{ type: "text", text: "update_goal only accepts status=complete." }], isError: true };
 			}
-			if (!goal) {
-				return { content: [{ type: "text", text: "No goal is set." }], isError: true };
+			if (!goal || goal.status !== "active") {
+				return { content: [{ type: "text", text: "Only an active goal can be marked achieved; waiting/paused is not completion." }], details: { goal }, isError: true };
 			}
 			const now = Date.now();
 			const next: GoalState = { ...goal, status: "complete", updatedAt: now };
@@ -428,6 +468,10 @@ export default function piGoal(pi: ExtensionAPI) {
 			if (trimmed === "pause" || trimmed === "resume") {
 				if (!goal) {
 					ctx.ui.notify("No goal is set.", "warning");
+					return;
+				}
+				if (goal.status === "complete" || (trimmed === "resume" && goal.tokenBudget != null && goal.tokensUsed >= goal.tokenBudget)) {
+					ctx.ui.notify("Completed or budget-exhausted goals cannot resume; explicitly create a new goal.", "warning");
 					return;
 				}
 				const status: GoalStatus = trimmed === "pause" ? "paused" : "active";

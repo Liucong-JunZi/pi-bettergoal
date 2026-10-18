@@ -41,6 +41,36 @@ function harness() {
 async function run(fn) { const h = harness(); try { await h.command('test hook objective'); h.messages.length=0; await fn(h); } finally { h.close(); } }
 const turns = h => h.messages.filter(m => m.options?.triggerTurn).length;
 
+test('lifecycle tools remain exposed while waiting and paused; resume does not duplicate turns', async () => run(async h => {
+ await h.call('wait_goal',{kind:'manual',reason:'permission'});
+ for (const name of ['get_goal','pause_goal','resume_goal','clear_goal','set_goal_statusbar']) assert.ok(h.active.includes(name), name);
+ const state = await h.call('get_goal',{}); assert.equal(state.details.goal.status,'waiting');
+ assert.equal((await h.call('pause_goal',{reason:'user requests pause'})).terminate,true);
+ assert.equal(h.state.status,'paused');
+ await h.call('resume_goal',{reason:'user explicitly requests resume'});
+ assert.equal(h.state.status,'active');assert.equal(turns(h),0);
+ h.event('agent_end');await Promise.resolve();assert.equal(turns(h),1);
+ await h.call('set_goal_statusbar',{enabled:false});assert.equal(h.entries.at(-1).data.statusBarEnabled,false);
+ await h.call('clear_goal',{reason:'user requests clear'});assert.equal(h.state,null);
+}));
+test('pause tool cancels hook and completion alias requires active state', async () => run(async h => {
+ await h.call('wait_goal',{kind:'event',event:'done',reason:'output'});
+ const signal={goalId:h.state.id,waitId:h.state.wait.id,event:'done'};
+ await h.call('pause_goal',{reason:'user pause'});h.emit(signal);assert.equal(turns(h),0);assert.equal(h.timers.size,0);
+ assert.equal((await h.call('achieve_goal',{status:'complete'})).isError,true);
+ await h.call('resume_goal',{reason:'user resume'});
+ await h.call('achieve_goal',{status:'complete'});assert.equal(h.state.status,'complete');
+ await assert.rejects(h.call('resume_goal',{reason:'user resume'}));
+}));
+test('resume tool rejects missing goal, blank reason, duplicate resume and spent budget', async () => run(async h => {
+ await assert.rejects(h.call('pause_goal',{reason:' '}));
+ await assert.rejects(h.call('resume_goal',{reason:'explicit request'}));
+ h.state.tokenBudget=1;h.state.tokensUsed=1;
+ await h.call('pause_goal',{reason:'blocker'});
+ await assert.rejects(h.call('resume_goal',{reason:'user resume'}));
+ await h.call('clear_goal',{reason:'user clear'});
+ await assert.rejects(h.call('resume_goal',{reason:'user resume'}));
+}));
 test('pure conditions validate bounds, timer, file changes and event correlation', () => {
  const dir = mkdtempSync(join(tmpdir(),'goal-hook-'));
  try {

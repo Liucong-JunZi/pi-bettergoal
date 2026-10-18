@@ -6,6 +6,10 @@ Load this package instead of npm:pi-goal, never both. Personal settings may refe
 
 This package targets @earendil-works Pi APIs (including tool terminate:true). It does not modify the model or run outside Pi. No project .pi directory is needed.
 
+## Lifecycle operation tools (0.3.0)
+
+create_goal/get_goal/pause_goal/resume_goal/clear_goal/set_goal_statusbar remain available in all states. wait_goal/update_goal/achieve_goal are active-only. achieve_goal accepts status=complete and shares the audited completion implementation with update_goal. Pause/resume/clear require reason; resume/clear require explicit user request (model-facing policy, not a UI approval gate). Resume discards the prior wait and does not directly queue a second model turn; agent_end handles continuation. Complete and token-exhausted goals cannot resume. The same resume guards apply to slash commands.
+
 ## State machine
 
 active -> wait_goal -> waiting -> matched hook -> active
@@ -56,7 +60,7 @@ Wrong/stale IDs or names are ignored. The event payload is not inserted as model
 
 ## Verification boundaries
 
-Nine automated tests exercise the actual extension registration and handlers using a mock Pi API and fake scheduler, plus pure condition tests: no waiting continuation; terminate result; final-turn accounting; correlated one-shot wake; busy latching and cancellation; clear/replace/reload/shutdown/session-switch/branch-navigation cleanup; local file readiness/expiry; manual resume and budget handling. They do not establish actual live-session reload or remote job completion. A Pi extension-load smoke check separately tests real loader compatibility; after /reload, use a disposable goal for live end-to-end checks.
+Twelve automated tests exercise the actual extension registration and handlers using a mock Pi API and fake scheduler, plus pure condition tests: no waiting continuation; terminate result; final-turn accounting; correlated one-shot wake; busy latching and cancellation; clear/replace/reload/shutdown/session-switch/branch-navigation cleanup; local file readiness/expiry; manual resume and budget handling. They do not establish actual live-session reload or remote job completion. A Pi extension-load smoke check separately tests real loader compatibility; after /reload, use a disposable goal for live end-to-end checks.
 
 Run tests with npm install --ignore-scripts --legacy-peer-deps followed by npm test in a standalone checkout, or provide the installed Pi host node_modules through NODE_PATH. Never start a real goal in production merely to run unit tests.
 
