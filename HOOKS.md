@@ -8,7 +8,7 @@ This package targets @earendil-works Pi APIs (including tool terminate:true). It
 
 ## Lifecycle operation tools (0.3.0)
 
-create_goal/get_goal/pause_goal/resume_goal/clear_goal/set_goal_statusbar remain available in all states. wait_goal/update_goal/achieve_goal are active-only. achieve_goal accepts status=complete and shares the audited completion implementation with update_goal. Pause/resume/clear require reason; resume/clear require explicit user request (model-facing policy, not a UI approval gate). Resume discards the prior wait and does not directly queue a second model turn; agent_end handles continuation. Complete and token-exhausted goals cannot resume. The same resume guards apply to slash commands.
+Every registered goal tool is declared whenever a goal exists, independent of active/waiting/paused; state rules run inside execute(). create_goal and get_goal stay declared with no goal. This removes mid-turn declaration flapping that surfaced as "tool not found" immediately after a transition. achieve_goal accepts status=complete and shares the audited completion implementation with update_goal. Pause/resume/clear require reason; resume/clear require explicit user request (model-facing policy, not a UI approval gate). Resume discards the prior wait and does not directly queue a second model turn; agent_end handles continuation. Complete and token-exhausted goals cannot resume. The same resume guards apply to slash commands.
 
 ## State machine
 

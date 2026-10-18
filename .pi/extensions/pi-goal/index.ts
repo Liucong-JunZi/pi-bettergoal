@@ -91,16 +91,18 @@ function updateStatusBar(ctx: ExtensionContext) {
 	ctx.ui.setStatus(CUSTOM_TYPE, statusBarEnabled ? statusLine(goal) ?? "" : "");
 }
 
-const ACTIVE_GOAL_TOOL_NAMES = ["update_goal", "achieve_goal", "wait_goal"];
-const CONTROL_GOAL_TOOL_NAMES = ["create_goal", "get_goal", "pause_goal", "resume_goal", "clear_goal", "set_goal_statusbar"];
+const GOAL_TOOL_NAMES = ["update_goal", "achieve_goal", "wait_goal",
+	"pause_goal", "resume_goal", "clear_goal", "set_goal_statusbar"];
 
-// Lifecycle controls remain available during waiting/paused states. Completion
-// and waiting are valid only while active. Tool availability is not authorization.
+// Declaration depends only on whether a goal exists, never on its transient
+// lifecycle status. Toggling declarations mid-turn made the model see a tool in
+// one request and "tool not found" in the next. State rules stay in execute().
+// Tool availability is not authorization.
 function syncGoalTools(pi: ExtensionAPI) {
-	const wantActiveTools = goal?.status === "active";
 	const active = new Set(pi.getActiveTools());
-	for (const name of CONTROL_GOAL_TOOL_NAMES) active.add(name);
-	for (const name of ACTIVE_GOAL_TOOL_NAMES) (wantActiveTools ? active.add(name) : active.delete(name));
+	active.add("create_goal");
+	active.add("get_goal"); // inspection stays available so absence is verifiable
+	for (const name of GOAL_TOOL_NAMES) (goal ? active.add(name) : active.delete(name));
 	pi.setActiveTools(Array.from(active));
 }
 

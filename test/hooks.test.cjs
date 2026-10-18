@@ -53,6 +53,16 @@ test('lifecycle tools remain exposed while waiting and paused; resume does not d
  await h.call('set_goal_statusbar',{enabled:false});assert.equal(h.entries.at(-1).data.statusBarEnabled,false);
  await h.call('clear_goal',{reason:'user requests clear'});assert.equal(h.state,null);
 }));
+test('tool declarations never flap across lifecycle transitions', async () => run(async h => {
+ const all=['get_goal','pause_goal','resume_goal','clear_goal','set_goal_statusbar','wait_goal','achieve_goal','update_goal','create_goal'];
+ const snapshot=()=>all.filter(n=>h.active.includes(n)).sort().join(',');
+ const activeSet=snapshot();
+ await h.call('wait_goal',{kind:'manual',reason:'waiting'});assert.equal(snapshot(),activeSet);
+ await h.call('pause_goal',{reason:'paused'});assert.equal(snapshot(),activeSet);
+ await h.call('resume_goal',{reason:'resumed'});assert.equal(snapshot(),activeSet);
+ await h.call('clear_goal',{reason:'cleared'});
+ assert.equal(snapshot(),'create_goal,get_goal');
+}));
 test('pause tool cancels hook and completion alias requires active state', async () => run(async h => {
  await h.call('wait_goal',{kind:'event',event:'done',reason:'output'});
  const signal={goalId:h.state.id,waitId:h.state.wait.id,event:'done'};
@@ -89,7 +99,10 @@ test('pure conditions validate bounds, timer, file changes and event correlation
 test('wait stops continuation, terminates tool followup and preserves final-turn accounting', async () => run(async h => {
  h.event('turn_start');
  const result = await h.call('wait_goal',{kind:'event',reason:'waiting for test output',event:'done'});
- assert.equal(result.terminate,true);assert.equal(h.state.status,'waiting');assert.ok(!h.active.includes('wait_goal'));
+ assert.equal(result.terminate,true);assert.equal(h.state.status,'waiting');
+ // Declaration must not flap mid-turn: wait_goal stays declared, guarded by state.
+ assert.ok(h.active.includes('wait_goal'));
+ await assert.rejects(h.call('wait_goal',{kind:'manual',reason:'second wait'}));
  h.event('turn_end',{message:{usage:{input:3,output:4,totalTokens:7}}});
  h.event('agent_end');await Promise.resolve();assert.equal(turns(h),0);assert.ok(h.state.tokensUsed>0);
 }));

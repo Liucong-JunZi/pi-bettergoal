@@ -87,7 +87,7 @@ File waits inspect local metadata every five seconds without model, shell or net
 | `update_goal` | Backward-compatible completion alias |
 | `set_goal_statusbar` | Set footer visibility with `enabled` boolean |
 
-Inspection and lifecycle controls remain exposed while waiting/paused, so the user need not type slash commands. Pause/resume/clear require a concrete `reason`. Completion and wait tools are active-only. Resume cancels the old wait, not restarts its watcher. Completed or token-exhausted goals cannot resume. Automatic Continue messages and unrelated chat are not user authorization. Explicit-authorization rules are model-facing policy, not an enforced human approval dialog. `achieve_goal` and `update_goal` do not assess evidence automatically; the model must audit it.
+All goal tools stay declared for as long as a goal exists, regardless of whether it is active, waiting or paused; only their execution is state-checked. Declarations never flip mid-turn, which previously produced a `tool not found` error right after a state change. `create_goal` and `get_goal` remain declared even without a goal. Pause/resume/clear require a concrete `reason`. Resume cancels the old wait, not restarts its watcher. Completed or token-exhausted goals cannot resume. Automatic Continue messages and unrelated chat are not user authorization. Explicit-authorization rules are model-facing policy, not an enforced human approval dialog. `achieve_goal` and `update_goal` do not assess evidence automatically; the model must audit it.
 
 ## Lifecycle and safety
 

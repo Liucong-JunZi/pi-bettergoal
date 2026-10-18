@@ -1,6 +1,6 @@
 {
   "name": "@liucong233333/pi-bettergoal",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Enhanced Pi goals with model-selected wait/wake hooks, built on Michaelliv/pi-goal. Conflicts with pi-goal; do not load both.",
   "homepage": "https://github.com/Liucong-JunZi/pi-bettergoal#readme",
   "repository": {
